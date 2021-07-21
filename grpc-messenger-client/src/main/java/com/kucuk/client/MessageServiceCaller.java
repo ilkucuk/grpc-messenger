@@ -17,7 +17,6 @@ import java.time.Instant;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
-
 public class MessageServiceCaller implements Callable<MessageServiceCaller.CallResult>, Closeable {
 
     private final int loopCount;

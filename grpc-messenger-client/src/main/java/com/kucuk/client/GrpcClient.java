@@ -1,8 +1,5 @@
 package com.kucuk.client;
 
-import org.apache.jmeter.config.Arguments;
-import org.apache.jmeter.protocol.java.sampler.JavaSamplerContext;
-
 import javax.net.ssl.SSLException;
 import java.io.File;
 import java.util.ArrayList;
@@ -18,8 +15,8 @@ public class GrpcClient {
     public static void main(String[] args) throws SSLException, InterruptedException, ExecutionException {
 
         int sleepPeriod = 10;
-        int threadCount = 100;
-        int callCount = 1000;
+        int threadCount = 500;
+        int callCount = 200;
 
         if (args.length > 0) {
             sleepPeriod = Integer.parseInt(args[0]);
@@ -27,9 +24,12 @@ public class GrpcClient {
         if (args.length > 1) {
             threadCount = Integer.parseInt(args[1]);
         }
-        if (args.length >2) {
+        if (args.length > 2) {
             callCount = Integer.parseInt(args[2]);
         }
+
+        System.out.println("SleepPeriod: " + sleepPeriod + " ThreadCount: " + threadCount + " CallCount: " + callCount);
+
 
         File ca = new File("../cert/ca.crt");
         if (!ca.exists()) {
@@ -60,18 +60,5 @@ public class GrpcClient {
                     " Duration: " + result.getDuration() / callCount);
         }
 
-        Arguments arguments = new Arguments();
-        arguments.addArgument("host", "kucuk.com");
-        arguments.addArgument("port", "443");
-        arguments.addArgument("ca", "../cert/ca.crt");
-        arguments.addArgument("requestId", "1000");
-        arguments.addArgument("author", "ikucuk@gmail.com");
-        arguments.addArgument("title", "Message Title For Medium Message");
-        arguments.addArgument("content", "Message Content");
-        arguments.addArgument("sleepPeriod", "2000");
-        JavaSamplerContext context = new JavaSamplerContext(arguments);
-        GrpcMessengerServiceSampler sampler = new GrpcMessengerServiceSampler();
-        sampler.setupTest(context);
-        sampler.runTest(context);
     }
 }
