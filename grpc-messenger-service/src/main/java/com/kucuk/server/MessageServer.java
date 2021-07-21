@@ -18,7 +18,7 @@ public class MessageServer {
 
     private void start(String certRoot) throws IOException {
         File certFile = Paths.get( certRoot, "kucuk.com.crt").toFile();
-        File keyFile = Paths.get(certRoot, "server.pem").toFile();
+        File keyFile = Paths.get(certRoot, "kucuk.com.pem").toFile();
         File caFile = Paths.get(certRoot, "ca.crt").toFile();
 
         int port = 443;

@@ -15,7 +15,7 @@ public class GrpcClient {
     public static void main(String[] args) throws SSLException, InterruptedException, ExecutionException {
 
         int sleepPeriod = 10;
-        int threadCount = 500;
+        int threadCount = 10;
         int callCount = 200;
 
         if (args.length > 0) {
@@ -50,15 +50,18 @@ public class GrpcClient {
             results.add(callResultFuture);
         }
         executor.shutdown();
-        if (executor.awaitTermination(500, TimeUnit.SECONDS)) {
+        if (executor.awaitTermination(1800, TimeUnit.SECONDS)) {
             executor.shutdownNow();
         }
 
+        double total = 0;
         for (Future<MessageServiceCaller.CallResult> resultFuture : results) {
             MessageServiceCaller.CallResult result = resultFuture.get();
             System.out.println("Success Rate: " + result.getSuccessCount() +
                     " Duration: " + result.getDuration() / callCount);
+            total += ((double) result.getDuration()) / callCount;
         }
+        System.out.println("Average Call Duration: " + total / results.size());
 
     }
 }

@@ -47,6 +47,9 @@ public class MessageServiceCaller implements Callable<MessageServiceCaller.CallR
                 .useTransportSecurity()
                 .sslContext(GrpcSslContexts.forClient().trustManager(ca).build())
                 .withOption(ChannelOption.CONNECT_TIMEOUT_MILLIS, (int) TimeUnit.SECONDS.toMillis(10))
+                .keepAliveWithoutCalls(true)
+                .keepAliveTime(120, TimeUnit.SECONDS)
+                .keepAliveTimeout(60, TimeUnit.SECONDS)
                 .build();
 
         clientStub = MessageServiceGrpc.newBlockingStub(channel);
