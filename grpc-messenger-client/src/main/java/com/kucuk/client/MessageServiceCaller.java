@@ -32,8 +32,8 @@ public class MessageServiceCaller implements Callable<MessageServiceCaller.CallR
     private double sampleDouble = 1.0d;
     private int sampleInteger = 0;
 
-    @Getter
-    private CallResult callResult;
+
+    private long responseAccumulator = 0;
 
     public MessageServiceCaller(int loopCount, String host, int port, long requestId, String author, String title, String content, int sleepPeriod, File ca) throws SSLException {
         this.loopCount = loopCount;
@@ -75,16 +75,20 @@ public class MessageServiceCaller implements Callable<MessageServiceCaller.CallR
         }
         long duration = Instant.now().toEpochMilli() - start;
 
-        callResult = CallResult.builder()
+        return CallResult.builder()
                 .successCount(success)
                 .failureCount(failure)
                 .duration(duration)
                 .build();
-        return callResult;
     }
 
     private boolean processResponse(CreateMessageResponse response) {
-        return response.getResponseId() > 0;
+        if (response.getResponseId() > 0) {
+            responseAccumulator+=response.getResponseId();
+            return true;
+        } else {
+            return false;
+        }
     }
 
     private CreateMessageRequest createRequest() {
@@ -117,5 +121,6 @@ public class MessageServiceCaller implements Callable<MessageServiceCaller.CallR
         private final int successCount;
         private final int failureCount;
         private final long duration;
+        private final long accumulator;
     }
 }
