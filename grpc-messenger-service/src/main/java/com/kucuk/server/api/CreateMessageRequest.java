@@ -1,7 +1,6 @@
 package com.kucuk.server.api;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonRootName;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -39,4 +38,7 @@ public class CreateMessageRequest {
 
     @JsonProperty("SampleBooleanField")
     Boolean sampleBooleanField;
+
+    @JsonProperty("MessageCount")
+    Integer messageCount;
 }

@@ -26,6 +26,7 @@ public class MessageServiceCaller implements Callable<MessageServiceCaller.CallR
     private final int sleepPeriod;
     private final ManagedChannel channel;
     private final MessageServiceGrpc.MessageServiceBlockingStub clientStub;
+    private  final int messageCount;
 
     private long requestId;
     private boolean sampleBoolean = false;
@@ -35,7 +36,7 @@ public class MessageServiceCaller implements Callable<MessageServiceCaller.CallR
 
     private long responseAccumulator = 0;
 
-    public MessageServiceCaller(int loopCount, String host, int port, long requestId, String author, String title, String content, int sleepPeriod, File ca) throws SSLException {
+    public MessageServiceCaller(int loopCount, String host, int port, long requestId, String author, String title, String content, int sleepPeriod, File ca, int messageCount) throws SSLException {
         this.loopCount = loopCount;
         this.requestId = requestId;
         this.author = author;
@@ -51,7 +52,7 @@ public class MessageServiceCaller implements Callable<MessageServiceCaller.CallR
                 .keepAliveTime(120, TimeUnit.SECONDS)
                 .keepAliveTimeout(60, TimeUnit.SECONDS)
                 .build();
-
+        this.messageCount = messageCount;
         clientStub = MessageServiceGrpc.newBlockingStub(channel);
     }
 
@@ -107,6 +108,7 @@ public class MessageServiceCaller implements Callable<MessageServiceCaller.CallR
                 .setSampleBooleanField(sampleBoolean)
                 .setSampleDoubleField(sampleDouble)
                 .setSampleIntegerField(sampleInteger)
+                .setMessageCount(messageCount)
                 .build();
     }
 

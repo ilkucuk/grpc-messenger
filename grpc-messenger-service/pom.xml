@@ -93,6 +93,11 @@
             <artifactId>junit-jupiter</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-text</artifactId>
+            <version>1.9</version>
+        </dependency>
     </dependencies>
 
 
@@ -117,6 +122,29 @@
             </extension>
         </extensions>
         <plugins>
+            <!--
+           Uncomment this when you have added toolchains.xml in ~/.m2
+           See: https://dzone.com/articles/guide-for-supporting-multiple-versions-of-java-8-1
+           -->
+            <!--<plugin>-->
+                <!--<groupId>org.apache.maven.plugins</groupId>-->
+                <!--<artifactId>maven-toolchains-plugin</artifactId>-->
+                <!--<version>3.0.0</version>-->
+                <!--<executions>-->
+                    <!--<execution>-->
+                        <!--<goals>-->
+                            <!--<goal>toolchain</goal>-->
+                        <!--</goals>-->
+                    <!--</execution>-->
+                <!--</executions>-->
+                <!--<configuration>-->
+                    <!--<toolchains>-->
+                        <!--<jdk>-->
+                            <!--<version>11</version>-->
+                        <!--</jdk>-->
+                    <!--</toolchains>-->
+                <!--</configuration>-->
+            <!--</plugin>-->
             <plugin>
                 <groupId>org.xolstice.maven.plugins</groupId>
                 <artifactId>protobuf-maven-plugin</artifactId>

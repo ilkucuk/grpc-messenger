@@ -15,6 +15,13 @@ message CreateMessageRequest {
   double sampleDoubleField = 7;
   int32 sampleIntegerField = 8;
   bool sampleBooleanField = 9;
+  int32 messageCount = 10;
+}
+
+message Message {
+  int64 messageId = 1;
+  string content = 2;
+  int64 time = 3;
 }
 
 /* response object for create message operation */
@@ -25,6 +32,7 @@ message CreateMessageResponse {
   double sampleDoubleField = 4;
   int32 sampleIntegerField= 5;
   bool sampleBooleanField = 6;
+  repeated Message messages = 7;
 }
 
 service MessageService {
