@@ -10,25 +10,16 @@ import jakarta.ws.rs.client.WebTarget;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.commons.text.RandomStringGenerator;
 
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
 public class MessageService extends MessageServiceGrpc.MessageServiceImplBase {
+    private String[] randomMessageList;
 
-    private final static int NO_MESSAGES = 1000;
-    private static final int MESSAGE_LEN = 1000;
-    private static String[] MESSAGE_CONTENT_ARRAY;
-
-    public MessageService() {
-        MESSAGE_CONTENT_ARRAY = new String[NO_MESSAGES];
-        RandomStringGenerator generator = new RandomStringGenerator.Builder()
-                .withinRange('a', 'z').build();
-        for (int i = 0; i < NO_MESSAGES; i++) {
-            MESSAGE_CONTENT_ARRAY[i] = generator.generate(MESSAGE_LEN);
-        }
+    public MessageService(String[] randomMessageList) {
+        this.randomMessageList = randomMessageList;
     }
 
     @Override
@@ -85,7 +76,7 @@ public class MessageService extends MessageServiceGrpc.MessageServiceImplBase {
                 messages.set(i,
                         com.kucuk.message.Message.newBuilder()
                                 .setMessageId(Instant.now().toEpochMilli())
-                                .setContent(MESSAGE_CONTENT_ARRAY[i % NO_MESSAGES])
+                                .setContent(randomMessageList[i % randomMessageList.length])
                                 .setTime(Instant.now().toEpochMilli())
                                 .build());
             }
