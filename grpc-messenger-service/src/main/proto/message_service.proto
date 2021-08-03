@@ -11,17 +11,10 @@ message CreateMessageRequest {
   string content = 3;
   string author = 4;
   int64 time = 5;
-  int32 sleepPeriod = 6;
+  int32 blockingCallPeriod = 6;
   double sampleDoubleField = 7;
   int32 sampleIntegerField = 8;
   bool sampleBooleanField = 9;
-  int32 messageCount = 10;
-}
-
-message Message {
-  int64 messageId = 1;
-  string content = 2;
-  int64 time = 3;
 }
 
 /* response object for create message operation */
@@ -32,9 +25,33 @@ message CreateMessageResponse {
   double sampleDoubleField = 4;
   int32 sampleIntegerField= 5;
   bool sampleBooleanField = 6;
-  repeated Message messages = 7;
+}
+
+message Message {
+  int64 messageId = 1;
+  string title = 2;
+  string content = 3;
+  string author = 4;
+  int64 time = 5;
+}
+
+/* Request object to list message(s) */
+message ListMessageRequest {
+  int32 pageSize = 1;
+  string pageToken = 2;
+  string author = 3;
+  int32 blockingCallPeriod = 4;
+}
+
+/* response object for list message operation */
+message ListMessageResponse {
+  bool hasNext = 1;
+  string nextPageToken = 2;
+  int64 time = 3;
+  repeated Message messages = 4;
 }
 
 service MessageService {
   rpc createMessage(CreateMessageRequest) returns (CreateMessageResponse);
+  rpc listMessage(ListMessageRequest) returns (ListMessageResponse);
 }

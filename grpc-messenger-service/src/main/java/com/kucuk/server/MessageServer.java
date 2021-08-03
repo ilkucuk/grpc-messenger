@@ -1,10 +1,10 @@
 package com.kucuk.server;
 
+import com.kucuk.server.service.MessageService;
 import io.grpc.Server;
 import io.grpc.netty.GrpcSslContexts;
 import io.grpc.netty.NettyServerBuilder;
 import io.netty.handler.ssl.ClientAuth;
-import org.apache.commons.text.RandomStringGenerator;
 
 import java.io.File;
 import java.io.IOException;
@@ -14,9 +14,6 @@ import java.util.logging.Logger;
 public class MessageServer {
 
     private static final Logger logger = Logger.getLogger(MessageServer.class.getName());
-    private final static int NO_MESSAGES = 1000;
-    private static final int MESSAGE_LEN = 1000;
-    private static String[] MESSAGE_CONTENT_ARRAY;
 
     private Server server;
 
@@ -24,11 +21,10 @@ public class MessageServer {
         File certFile = Paths.get( certRoot, "kucuk.com.crt").toFile();
         File keyFile = Paths.get(certRoot, "kucuk.com.pem").toFile();
         File caFile = Paths.get(certRoot, "ca.crt").toFile();
-        generateRandomMessages();
 
         int port = 443;
         server = NettyServerBuilder.forPort(port)
-                .addService(new MessageService(MESSAGE_CONTENT_ARRAY))
+                .addService(new MessageService())
                 .sslContext(GrpcSslContexts.forServer(certFile, keyFile)
                         .trustManager(caFile)
                         .clientAuth(ClientAuth.NONE)
@@ -66,15 +62,5 @@ public class MessageServer {
         final MessageServer server = new MessageServer();
         server.start(args[0]);
         server.blockUntilShutdown();
-    }
-
-    private static void generateRandomMessages() {
-        MESSAGE_CONTENT_ARRAY = new String[NO_MESSAGES];
-        RandomStringGenerator generator = new RandomStringGenerator.Builder()
-                .withinRange('a', 'z').build();
-
-        for (int i = 0; i < NO_MESSAGES; i++) {
-            MESSAGE_CONTENT_ARRAY[i] = generator.generate(MESSAGE_LEN);
-        }
     }
 }

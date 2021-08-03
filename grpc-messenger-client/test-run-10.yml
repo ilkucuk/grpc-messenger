@@ -1,0 +1,13 @@
+testRunConfigs:
+  - blockingCallPeriod: 100
+    concurrentClientThreadCount: 10
+    callCountForASingleClient: 200
+    caller: MessageServiceCreateCaller
+    numberOfRuns: 3
+    pageSize: 1
+  - blockingCallPeriod: 100
+    concurrentClientThreadCount: 10
+    callCountForASingleClient: 200
+    caller: MessageServiceListCaller
+    numberOfRuns: 3
+    pageSize: 2000
