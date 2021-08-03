@@ -7,7 +7,7 @@ import java.io.PrintWriter;
 
 public class ResultWriter implements Closeable {
 
-    PrintWriter printWriter;
+    private PrintWriter printWriter;
 
     public ResultWriter(String fileName) throws IOException {
         FileWriter fileWriter = new FileWriter(fileName);

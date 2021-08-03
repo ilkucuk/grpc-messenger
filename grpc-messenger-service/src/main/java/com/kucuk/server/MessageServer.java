@@ -1,5 +1,6 @@
 package com.kucuk.server;
 
+import com.kucuk.server.service.MessageService;
 import io.grpc.Server;
 import io.grpc.netty.GrpcSslContexts;
 import io.grpc.netty.NettyServerBuilder;
