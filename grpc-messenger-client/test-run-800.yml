@@ -6,44 +6,20 @@ testRunConfigs:
     numberOfRuns: 5
     pageSize: 1
   - blockingCallPeriod: 100
+    concurrentClientThreadCount: 400
+    callCountForASingleClient: 200
+    caller: MessageServiceListCaller
+    numberOfRuns: 5
+    pageSize: 2000
+  - blockingCallPeriod: 100
     concurrentClientThreadCount: 800
     callCountForASingleClient: 200
     caller: MessageServiceCreateCaller
     numberOfRuns: 5
     pageSize: 1
   - blockingCallPeriod: 100
-    concurrentClientThreadCount: 400
-    callCountForASingleClient: 200
-    caller: MessageServiceHttp2CreateCaller
-    numberOfRuns: 5
-    pageSize: 1
-  - blockingCallPeriod: 100
-    concurrentClientThreadCount: 800
-    callCountForASingleClient: 200
-    caller: MessageServiceHttp2CreateCaller
-    numberOfRuns: 5
-    pageSize: 1
-  - blockingCallPeriod: 100
-    concurrentClientThreadCount: 400
-    callCountForASingleClient: 200
-    caller: MessageServiceListCaller
-    numberOfRuns: 5
-    pageSize: 2000
-  - blockingCallPeriod: 100
     concurrentClientThreadCount: 800
     callCountForASingleClient: 200
     caller: MessageServiceListCaller
-    numberOfRuns: 5
-    pageSize: 2000
-  - blockingCallPeriod: 100
-    concurrentClientThreadCount: 400
-    callCountForASingleClient: 200
-    caller: MessageServiceHttp2ListCaller
-    numberOfRuns: 5
-    pageSize: 2000
-  - blockingCallPeriod: 100
-    concurrentClientThreadCount: 800
-    callCountForASingleClient: 200
-    caller: MessageServiceHttp2ListCaller
     numberOfRuns: 5
     pageSize: 2000

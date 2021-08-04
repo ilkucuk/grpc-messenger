@@ -33,9 +33,8 @@ public class MessageServiceListCaller implements MessageServiceCaller {
         int failure = 0;
 
         long start = Instant.now().toEpochMilli();
-        for(int i=0; i<loopCount; i++) {
+        for (int i = 0; i < loopCount; i++) {
             ListMessageRequest request = testHelper.newListMessageRequest();
-
             ListMessageResponse response = clientStub.listMessage(request);
 
             if (processResponse(response)) {
@@ -45,6 +44,7 @@ public class MessageServiceListCaller implements MessageServiceCaller {
             }
         }
         long duration = Instant.now().toEpochMilli() - start;
+        channel.shutdown();
 
         return CallResult.builder()
                 .successCount(success)
@@ -62,10 +62,4 @@ public class MessageServiceListCaller implements MessageServiceCaller {
             return false;
         }
     }
-
-    @Override
-    public void close() {
-        channel.shutdown();
-    }
-
 }

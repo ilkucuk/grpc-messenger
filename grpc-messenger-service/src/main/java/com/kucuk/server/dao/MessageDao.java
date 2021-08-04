@@ -1,10 +1,8 @@
 package com.kucuk.server.dao;
 
-
 import com.kucuk.message.Message;
 
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.stream.Collectors;
@@ -31,18 +29,15 @@ public class MessageDao {
                 .collect(Collectors.toList());
     }
 
-    public static ArrayList<Message> getMessages(int size) {
-        ArrayList<Message> randomMessages = new ArrayList<>();
-        for (int i = 0; i < size; i++) {
-            randomMessages.add(
-                    Message.newBuilder()
-                            .setMessageId(Instant.now().toEpochMilli())
-                            .setTitle("Sample Message Title")
-                            .setContent(CONTENTS.get(random.nextInt(CONTENTS.size())))
-                            .setAuthor("ikucuk@gmail.com")
-                            .setTime(Instant.now().toEpochMilli())
-                            .build());
-        }
-        return randomMessages;
+    public static List<Message> getMessages(int size) {
+        return Stream.generate(() -> Message.newBuilder()
+                .setMessageId(Instant.now().toEpochMilli())
+                .setTitle("Sample Message Title")
+                .setContent(CONTENTS.get(random.nextInt(CONTENTS.size())))
+                .setAuthor("ikucuk@gmail.com")
+                .setTime(Instant.now().toEpochMilli())
+                .build())
+                .limit(size)
+                .collect(Collectors.toList());
     }
 }

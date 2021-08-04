@@ -11,7 +11,7 @@ import java.io.File;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
-public interface MessageServiceCaller extends Callable<CallResult>, Closeable {
+public interface MessageServiceCaller extends Callable<CallResult> {
     String serverEndpoint = "kucuk.com";
     int serverPort = 443;
     String caPath = "../cert/ca.crt";

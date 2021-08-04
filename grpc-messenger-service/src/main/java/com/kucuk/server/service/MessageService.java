@@ -21,61 +21,31 @@ import java.util.List;
 public class MessageService extends MessageServiceGrpc.MessageServiceImplBase {
 
     public MessageService() {
-
     }
-
 
     @Override
     public void createMessage(CreateMessageRequest request,
                               io.grpc.stub.StreamObserver<CreateMessageResponse> responseObserver) {
-        final long blockingCallTimeStamp = makeBlockingCall(request.getBlockingCallPeriod());
+
         final String sha256hex = DigestUtils.sha256Hex(request.getRequestId() + request.getTitle() + request.getContent() + request.getAuthor());
 
-        CreateMessageResponse response = CreateMessageResponse.newBuilder()
-                .setResponseId(Instant.now().toEpochMilli())
-                .setHash(sha256hex)
-                .setTime(blockingCallTimeStamp)
-                .setSampleBooleanField(!request.getSampleBooleanField())
-                .setSampleDoubleField(request.getSampleDoubleField() + 0.1)
-                .setSampleIntegerField(request.getSampleIntegerField() + 1)
-                .build();
+        if (request.getBlockingCallPeriod() > 0 && request.getBlockingCallPeriod() < 5001) {
 
-        responseObserver.onNext(response);
-        responseObserver.onCompleted();
-
-    }
-
-    @Override
-    public void listMessage(com.kucuk.message.ListMessageRequest request,
-                            io.grpc.stub.StreamObserver<com.kucuk.message.ListMessageResponse> responseObserver) {
-        final long blockingCallTimeStamp = makeBlockingCall(request.getBlockingCallPeriod());
-
-        final List<Message> messageList = new ArrayList<>(MessageDao.getMessages(request.getPageSize()));
-
-        ListMessageResponse listMessageResponse = ListMessageResponse.newBuilder()
-                .setHasNext(true)
-                .setNextPageToken(request.getPageToken() + "-Next")
-                .setTime(blockingCallTimeStamp)
-                .addAllMessages(messageList)
-                .build();
-
-        responseObserver.onNext(listMessageResponse);
-        responseObserver.onCompleted();
-
-    }
-
-
-    private Long makeBlockingCall(Integer blockingPeriod) {
-        final Long[] blockingCallTimeStamp = {0L};
-
-        if (blockingPeriod > 0 && blockingPeriod < 5001) {
-
-            WebTarget target = BlockingServiceClientFactory.getTarget(blockingPeriod);
+            WebTarget target = BlockingServiceClientFactory.getTarget(request.getBlockingCallPeriod());
             Invocation.Builder invocationBuilder = target.request(MediaType.APPLICATION_JSON);
             invocationBuilder.async().get(new InvocationCallback<Response>() {
                 @Override
                 public void completed(Response response) {
-                    blockingCallTimeStamp[0] = response.readEntity(Long.class);
+                    Long blockingCallTimeStamp = response.readEntity(Long.class);
+                    responseObserver.onNext(CreateMessageResponse.newBuilder()
+                            .setResponseId(Instant.now().toEpochMilli())
+                            .setHash(sha256hex)
+                            .setTime(blockingCallTimeStamp)
+                            .setSampleBooleanField(!request.getSampleBooleanField())
+                            .setSampleDoubleField(request.getSampleDoubleField() + 0.1)
+                            .setSampleIntegerField(request.getSampleIntegerField() + 1)
+                            .build());
+                    responseObserver.onCompleted();
                 }
 
                 @Override
@@ -83,8 +53,58 @@ public class MessageService extends MessageServiceGrpc.MessageServiceImplBase {
 
                 }
             });
-        }
 
-        return blockingCallTimeStamp[0];
+        } else {
+            responseObserver.onNext(CreateMessageResponse.newBuilder()
+                    .setResponseId(Instant.now().toEpochMilli())
+                    .setHash(sha256hex)
+                    .setTime(0L)
+                    .setSampleBooleanField(!request.getSampleBooleanField())
+                    .setSampleDoubleField(request.getSampleDoubleField() + 0.1)
+                    .setSampleIntegerField(request.getSampleIntegerField() + 1)
+                    .build());
+            responseObserver.onCompleted();
+        }
+    }
+
+    @Override
+    public void listMessage(com.kucuk.message.ListMessageRequest request,
+                            io.grpc.stub.StreamObserver<com.kucuk.message.ListMessageResponse> responseObserver) {
+        final List<Message> messageList = new ArrayList<>(MessageDao.getMessages(request.getPageSize()));
+
+        if (request.getBlockingCallPeriod() > 0 && request.getBlockingCallPeriod() < 5001) {
+
+            WebTarget target = BlockingServiceClientFactory.getTarget(request.getBlockingCallPeriod());
+            Invocation.Builder invocationBuilder = target.request(MediaType.APPLICATION_JSON);
+            invocationBuilder.async().get(new InvocationCallback<Response>() {
+                @Override
+                public void completed(Response response) {
+                    Long blockingCallTimeStamp = response.readEntity(Long.class);
+
+                    responseObserver.onNext(ListMessageResponse.newBuilder()
+                            .setHasNext(true)
+                            .setNextPageToken(request.getPageToken() + "-Next")
+                            .setTime(blockingCallTimeStamp)
+                            .addAllMessages(messageList)
+                            .build());
+                    responseObserver.onCompleted();
+                }
+
+                @Override
+                public void failed(Throwable throwable) {
+
+                }
+            });
+
+        } else {
+
+            responseObserver.onNext(ListMessageResponse.newBuilder()
+                    .setHasNext(true)
+                    .setNextPageToken(request.getPageToken() + "-Next")
+                    .setTime(0L)
+                    .addAllMessages(messageList)
+                    .build());
+            responseObserver.onCompleted();
+        }
     }
 }

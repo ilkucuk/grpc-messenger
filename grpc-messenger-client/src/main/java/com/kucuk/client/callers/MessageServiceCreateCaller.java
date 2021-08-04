@@ -33,7 +33,7 @@ public class MessageServiceCreateCaller implements MessageServiceCaller {
         int failure = 0;
 
         long start = Instant.now().toEpochMilli();
-        for(int i=0; i<loopCount; i++) {
+        for (int i = 0; i < loopCount; i++) {
             CreateMessageRequest request = testHelper.newCreateMessageRequest();
             CreateMessageResponse response = clientStub.createMessage(request);
 
@@ -44,6 +44,7 @@ public class MessageServiceCreateCaller implements MessageServiceCaller {
             }
         }
         long duration = Instant.now().toEpochMilli() - start;
+        channel.shutdown();
 
         return CallResult.builder()
                 .successCount(success)
@@ -55,16 +56,10 @@ public class MessageServiceCreateCaller implements MessageServiceCaller {
 
     private boolean processResponse(CreateMessageResponse response) {
         if (response.getResponseId() > 0) {
-            responseAccumulator+=response.getResponseId();
+            responseAccumulator++;
             return true;
         } else {
             return false;
         }
     }
-
-    @Override
-    public void close() {
-        channel.shutdown();
-    }
-
 }

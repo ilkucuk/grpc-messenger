@@ -48,15 +48,17 @@ public class GrpcClient {
             return;
         }
 
-        ResultWriter resultWriter = new ResultWriter("TestRun-" + Instant.now().toString()+ ".txt");
-
+        ResultWriter resultWriter = new ResultWriter("TestRun-" + Instant.now().toString() + ".txt");
 
         for (TestRunConfig testRunConfig : clientConfig.getTestRunConfigs()) {
+
             System.out.println("blockingCallPeriod: " + testRunConfig.getBlockingCallPeriod() +
                     " ConcurrentClientThreadCount: " + testRunConfig.getConcurrentClientThreadCount() +
                     " CallCountForASingleClient: " + testRunConfig.getCallCountForASingleClient() +
                     " Caller" + testRunConfig.getCaller() +
-                    " NumberOfRuns: " + testRunConfig.getNumberOfRuns());
+                    " NumberOfRuns: " + testRunConfig.getNumberOfRuns() +
+                    " PageSize: " + testRunConfig.getPageSize());
+
             MessageServiceTestHelper testHelper = new MessageServiceTestHelper(testRunConfig.getBlockingCallPeriod(), testRunConfig.getPageSize());
             resultWriter.write("---Test--Run---");
             resultWriter.write("Config: " + testRunConfig);
@@ -71,10 +73,10 @@ public class GrpcClient {
 
                     switch (testRunConfig.getCaller()) {
                         case "MessageServiceCreateCaller":
-                            caller = new MessageServiceCreateCaller(testRunConfig.getConcurrentClientThreadCount(), testHelper);
+                            caller = new MessageServiceCreateCaller(testRunConfig.getCallCountForASingleClient(), testHelper);
                             break;
                         case "MessageServiceListCaller":
-                            caller = new MessageServiceListCaller(testRunConfig.getConcurrentClientThreadCount(), testHelper);
+                            caller = new MessageServiceListCaller(testRunConfig.getCallCountForASingleClient(), testHelper);
                             break;
                     }
 
@@ -94,13 +96,15 @@ public class GrpcClient {
                 int totalFailure = 0;
                 for (Future<CallResult> resultFuture : results) {
                     CallResult result = resultFuture.get();
-                    total += ((double) result.getDuration()) / testRunConfig.getConcurrentClientThreadCount();
+                    total += result.getDuration();
                     totalAccumulator += result.getAccumulator();
                     totalSuccess += result.getSuccessCount();
                     totalFailure += result.getFailureCount();
                 }
 
-                String resString = "Average Call Duration: " + total / results.size() +
+                double avg = (total / (double) testRunConfig.getCallCountForASingleClient()) / (double) results.size();
+
+                String resString = "Average Call Duration: " + avg +
                         " Success: " + totalSuccess +
                         " Failure: " + totalFailure +
                         " AC: " + totalAccumulator;
