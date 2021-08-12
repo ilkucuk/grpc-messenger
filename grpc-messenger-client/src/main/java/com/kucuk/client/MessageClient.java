@@ -1,9 +1,10 @@
 package com.kucuk.client;
 
 import com.kucuk.client.callers.CallResult;
-import com.kucuk.client.callers.MessageServiceCaller;
-import com.kucuk.client.callers.MessageServiceCreateCaller;
-import com.kucuk.client.callers.MessageServiceListCaller;
+import com.kucuk.client.callers.messageServiceCaller.CreateMessageCaller;
+import com.kucuk.client.callers.messageServiceCaller.CreateMessageStreamingCaller;
+import com.kucuk.client.callers.messageServiceCaller.ListMessageCaller;
+import com.kucuk.client.callers.messageServiceCaller.MessageServiceCaller;
 import com.kucuk.client.config.ClientConfig;
 import com.kucuk.client.config.ConfigReader;
 import com.kucuk.client.config.TestRunConfig;
@@ -20,7 +21,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
-public class GrpcClient {
+public class MessageClient {
 
     public static void main(String[] args) throws Exception {
 
@@ -69,18 +70,22 @@ public class GrpcClient {
                 List<Future<CallResult>> results = new ArrayList<>(testRunConfig.getConcurrentClientThreadCount());
 
                 for (int i = 0; i < testRunConfig.getConcurrentClientThreadCount(); i++) {
-                    MessageServiceCaller caller = null;
+                    MessageServiceCaller caller;
 
                     switch (testRunConfig.getCaller()) {
-                        case "MessageServiceCreateCaller":
-                            caller = new MessageServiceCreateCaller(testRunConfig.getCallCountForASingleClient(), testHelper);
+                        case "CreateMessageCaller":
+                            caller = new CreateMessageCaller(testRunConfig.getCallCountForASingleClient(), testHelper);
                             break;
-                        case "MessageServiceListCaller":
-                            caller = new MessageServiceListCaller(testRunConfig.getCallCountForASingleClient(), testHelper);
+                        case "ListMessageCaller":
+                            caller = new ListMessageCaller(testRunConfig.getCallCountForASingleClient(), testHelper);
                             break;
+                        case "CreateMessageStreamingCaller":
+                            caller = new CreateMessageStreamingCaller(testRunConfig.getCallCountForASingleClient(), testHelper);
+                            break;
+                        default:
+                            throw new IllegalArgumentException("Invalid caller" + testRunConfig.getCaller());
                     }
 
-                    assert caller != null;
                     Future<CallResult> callResultFuture = executor.submit(caller);
                     results.add(callResultFuture);
                 }
