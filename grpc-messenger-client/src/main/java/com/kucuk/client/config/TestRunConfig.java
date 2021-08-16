@@ -8,11 +8,11 @@ import lombok.ToString;
 @Setter
 @ToString
 public class TestRunConfig {
+    String caller;
     int blockingCallPeriod;
     int concurrentClientThreadCount;
     int callCountForASingleClient;
     int numberOfRuns;
     int pageSize;
-    String caller;
 
 }

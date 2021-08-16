@@ -16,13 +16,14 @@ public class MessageServer {
     private static final Logger logger = Logger.getLogger(MessageServer.class.getName());
 
     private Server server;
+    private static final int port = 443;
 
-    private void start(String certRoot) throws IOException {
+
+    public MessageServer(String certRoot) throws IOException {
         File certFile = Paths.get( certRoot, "kucuk.com.crt").toFile();
         File keyFile = Paths.get(certRoot, "kucuk.com.pem").toFile();
         File caFile = Paths.get(certRoot, "ca.crt").toFile();
 
-        int port = 443;
         server = NettyServerBuilder.forPort(port)
                 .addService(new MessageService())
                 .sslContext(GrpcSslContexts.forServer(certFile, keyFile)
@@ -31,6 +32,9 @@ public class MessageServer {
                         .build())
                 .build()
                 .start();
+    }
+
+    public void start() {
         logger.info("Server started, listening on " + port + " version: async jersey client, with deadline check");
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             // Use stderr here since the logger may have been reset by its JVM shutdown hook.
@@ -40,7 +44,7 @@ public class MessageServer {
         }));
     }
 
-    private void stop() {
+    public void stop() {
         if (server != null) {
             server.shutdown();
         }
@@ -59,8 +63,8 @@ public class MessageServer {
      * Main launches the server from the command line.
      */
     public static void main(String[] args) throws IOException, InterruptedException {
-        final MessageServer server = new MessageServer();
-        server.start(args[0]);
+        final MessageServer server = new MessageServer(args[0]);
+        server.start();
         server.blockUntilShutdown();
     }
 }

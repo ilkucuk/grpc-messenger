@@ -33,7 +33,7 @@ public class MessageServiceTestHelper {
         sampleDouble += 0.001;
         sampleInteger++;
 
-        return com.kucuk.message.CreateMessageRequest.newBuilder()
+        return CreateMessageRequest.newBuilder()
                 .setRequestId(requestId)
                 .setAuthor(AUTHOR)
                 .setTitle(TITLE)
@@ -47,11 +47,14 @@ public class MessageServiceTestHelper {
     }
 
     public ListMessageRequest newListMessageRequest() {
-        return com.kucuk.message.ListMessageRequest.newBuilder()
+        return ListMessageRequest.newBuilder()
                 .setBlockingCallPeriod(blockingCallPeriod)
                 .setAuthor(AUTHOR)
                 .setPageSize(pageSize)
                 .setPageToken(UUID.randomUUID().toString())
                 .build();
     }
+
+
+
 }
