@@ -4,7 +4,7 @@ import com.kucuk.client.callers.CallResult;
 import com.kucuk.client.callers.messageServiceCaller.CreateMessageCaller;
 import com.kucuk.client.callers.messageServiceCaller.CreateMessageStreamingCaller;
 import com.kucuk.client.callers.messageServiceCaller.ListMessageCaller;
-import com.kucuk.client.callers.messageServiceCaller.MessageServiceCaller;
+import com.kucuk.client.callers.messageServiceCaller.MessageServiceCallerBase;
 import com.kucuk.client.config.ClientConfig;
 import com.kucuk.client.config.ConfigReader;
 import com.kucuk.client.config.TestRunConfig;
@@ -70,7 +70,7 @@ public class MessageClient {
                 List<Future<CallResult>> results = new ArrayList<>(testRunConfig.getConcurrentClientThreadCount());
 
                 for (int i = 0; i < testRunConfig.getConcurrentClientThreadCount(); i++) {
-                    MessageServiceCaller caller;
+                    MessageServiceCallerBase caller;
 
                     switch (testRunConfig.getCaller()) {
                         case "CreateMessageCaller":

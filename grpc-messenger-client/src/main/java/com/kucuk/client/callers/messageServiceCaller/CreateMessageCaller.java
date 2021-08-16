@@ -9,7 +9,7 @@ import io.grpc.ManagedChannel;
 
 import java.time.Instant;
 
-public class CreateMessageCaller implements MessageServiceCaller {
+public class CreateMessageCaller extends MessageServiceCallerBase {
 
     private final int callCount;
     private final MessageServiceTestHelper testHelper;
@@ -22,7 +22,7 @@ public class CreateMessageCaller implements MessageServiceCaller {
         this.callCount = callCount;
         this.testHelper = testHelper;
 
-        channel = testHelper.getChannel();
+        channel = getChannel();
         clientStub = MessageServiceGrpc.newBlockingStub(channel);
     }
 
@@ -37,7 +37,7 @@ public class CreateMessageCaller implements MessageServiceCaller {
             CreateMessageRequest request = testHelper.newCreateMessageRequest();
             CreateMessageResponse response = clientStub.createMessage(request);
 
-            if (testHelper.isValidCreateMessageResponse(response)) {
+            if (isValidCreateMessageResponse(response)) {
                 responseAccumulator++;
                 success++;
             } else {
@@ -54,4 +54,9 @@ public class CreateMessageCaller implements MessageServiceCaller {
                 .accumulator(responseAccumulator)
                 .build();
     }
+
+    private boolean isValidCreateMessageResponse(CreateMessageResponse response) {
+        return response.getResponseId() > 0;
+    }
+
 }

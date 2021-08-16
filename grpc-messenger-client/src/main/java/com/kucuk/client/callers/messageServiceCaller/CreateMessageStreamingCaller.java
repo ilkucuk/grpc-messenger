@@ -12,7 +12,7 @@ import java.time.Instant;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-public class CreateMessageStreamingCaller implements MessageServiceCaller {
+public class CreateMessageStreamingCaller extends MessageServiceCallerBase {
 
     private int callCount;
     private final MessageServiceTestHelper testHelper;
@@ -25,7 +25,7 @@ public class CreateMessageStreamingCaller implements MessageServiceCaller {
         this.callCount = callCount;
         this.testHelper = testHelper;
 
-        channel = testHelper.getChannel();
+        channel = getChannel();
         asyncStub = MessageServiceGrpc.newStub(channel);
     }
 
@@ -40,7 +40,7 @@ public class CreateMessageStreamingCaller implements MessageServiceCaller {
             @Override
             public void onNext(CreateMessageResponse response) {
                 // 1. Analyse the response
-                if (testHelper.isValidCreateMessageResponse(response)) {
+                if (isValidCreateMessageResponse(response)) {
                     responseAccumulator++;
                     success[0]++;
                 } else {
@@ -49,7 +49,8 @@ public class CreateMessageStreamingCaller implements MessageServiceCaller {
 
                 // 2. Make a new create call if the callCount is not zero
                 if (callCount > 0) {
-                    makeCreateMessageCall();
+                    CreateMessageRequest request = testHelper.newCreateMessageRequest();
+                    requestObserver.onNext(request);
                     callCount--;
                 } else {
                     // Mark the end of requests
@@ -72,7 +73,8 @@ public class CreateMessageStreamingCaller implements MessageServiceCaller {
         final long start = Instant.now().toEpochMilli();
         try {
             // Make the first call and reduce the call count by 1.
-            makeCreateMessageCall();
+            CreateMessageRequest request = testHelper.newCreateMessageRequest();
+            requestObserver.onNext(request);
             callCount--;
 
             // Wait for all responses from the server
@@ -98,9 +100,8 @@ public class CreateMessageStreamingCaller implements MessageServiceCaller {
                 .build();
     }
 
-    private void makeCreateMessageCall() {
-        CreateMessageRequest request = testHelper.newCreateMessageRequest();
-        requestObserver.onNext(request);
+    private boolean isValidCreateMessageResponse(CreateMessageResponse response) {
+        return response.getResponseId() > 0;
     }
 
 }

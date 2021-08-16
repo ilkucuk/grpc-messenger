@@ -1,12 +1,12 @@
 testRunConfigs:
   - blockingCallPeriod: 100
-    concurrentClientThreadCount: 10
+    concurrentClientThreadCount: 100
     callCountForASingleClient: 200
     caller: CreateMessageCaller
     numberOfRuns: 3
     pageSize: 1
   - blockingCallPeriod: 100
-    concurrentClientThreadCount: 10
+    concurrentClientThreadCount: 100
     callCountForASingleClient: 200
     caller: ListMessageCaller
     numberOfRuns: 3

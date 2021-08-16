@@ -9,7 +9,7 @@ import io.grpc.ManagedChannel;
 
 import java.time.Instant;
 
-public class ListMessageCaller implements MessageServiceCaller {
+public class ListMessageCaller extends MessageServiceCallerBase {
 
     private final int callCount;
     private final MessageServiceTestHelper testHelper;
@@ -22,7 +22,7 @@ public class ListMessageCaller implements MessageServiceCaller {
         this.callCount = callCount;
         this.testHelper = testHelper;
 
-        channel = testHelper.getChannel();
+        channel = getChannel();
         clientStub = MessageServiceGrpc.newBlockingStub(channel);
     }
 
@@ -38,7 +38,7 @@ public class ListMessageCaller implements MessageServiceCaller {
             ListMessageRequest request = testHelper.newListMessageRequest();
             ListMessageResponse response = clientStub.listMessage(request);
 
-            if (testHelper.isValidListMessageResponse(response)) {
+            if (isValidListMessageResponse(response)) {
                 responseAccumulator++;
                 success++;
             } else {
@@ -54,6 +54,10 @@ public class ListMessageCaller implements MessageServiceCaller {
                 .duration(duration)
                 .accumulator(responseAccumulator)
                 .build();
+    }
+
+    private boolean isValidListMessageResponse(ListMessageResponse response) {
+        return response.getMessagesCount() > 0;
     }
 
 }
