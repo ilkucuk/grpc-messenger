@@ -4,7 +4,7 @@ Simple GRPC application for load testing
 
 ## How to Run
 
-sudo java -jar grpc-messenger-service-1.0-SNAPSHOT.jar cert
+sudo java -jar target/grpc-messenger-service-1.0-SNAPSHOT.jar config/kucuk.yaml
 
 ## Update /etc/hosts file
 

@@ -1,0 +1,5 @@
+certFilePath: "../cert/kucuk2.com.crt"
+keyFilePath: "../cert/kucuk2.com.pem"
+trustStorePath: "../cert/ca.crt"
+# Intentionally made 444 for ease of local testing.
+port: 444

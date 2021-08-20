@@ -12,7 +12,7 @@ testRunConfigs:
     numberOfRuns: 3
     pageSize: 2000
   - blockingCallPeriod: 100
-    concurrentClientThreadCount: 10
+    concurrentClientThreadCount: 100
     callCountForASingleClient: 200
     caller: CreateMessageStreamingCaller
     numberOfRuns: 3

@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package com.kucuk.block;
+option java_multiple_files = true;
+option java_outer_classname = "BlockServiceProtos";
+
+/* Request object to create a new message */
+message BlockingCallRequest {
+  int32 blockPeriodInMilliSeconds = 1;
+}
+
+/* response object for create message operation */
+message BlockingCallResponse {
+  int64 currentTime = 1;
+}
+
+service BlockService {
+  rpc blockingCall(BlockingCallRequest) returns (BlockingCallResponse);
+}

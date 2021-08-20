@@ -1,81 +1,106 @@
 package com.kucuk.server.service;
 
+import com.google.common.util.concurrent.ListenableFuture;
+import com.kucuk.block.BlockServiceGrpc;
+import com.kucuk.block.BlockingCallRequest;
+import com.kucuk.block.BlockingCallResponse;
 import com.kucuk.message.CreateMessageRequest;
 import com.kucuk.message.CreateMessageResponse;
 import com.kucuk.message.ListMessageRequest;
 import com.kucuk.message.ListMessageResponse;
 import com.kucuk.message.Message;
 import com.kucuk.message.MessageServiceGrpc;
-import com.kucuk.server.BlockingServiceClientFactory;
 import com.kucuk.server.dao.MessageDao;
+import io.grpc.ManagedChannel;
 import io.grpc.stub.StreamObserver;
-import jakarta.ws.rs.client.Invocation;
-import jakarta.ws.rs.client.InvocationCallback;
-import jakarta.ws.rs.client.WebTarget;
-import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.Response;
 import org.apache.commons.codec.digest.DigestUtils;
 
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 public class MessageService extends MessageServiceGrpc.MessageServiceImplBase {
+    private final ManagedChannel blockingServiceChannel;
+
+    public MessageService(ManagedChannel blockingServiceChannel) {
+        this.blockingServiceChannel = blockingServiceChannel;
+
+    }
 
     @Override
     public void createMessage(CreateMessageRequest request,
-                             StreamObserver<CreateMessageResponse> responseObserver) {
-
-
+                              StreamObserver<CreateMessageResponse> responseObserver) {
+        final String sha256hex = DigestUtils.sha256Hex(request.getRequestId() + request.getTitle() + request.getContent() + request.getAuthor());
         if (request.getBlockingCallPeriod() > 0 && request.getBlockingCallPeriod() < 5001) {
-
-            WebTarget target = BlockingServiceClientFactory.getTarget(request.getBlockingCallPeriod());
-            Invocation.Builder invocationBuilder = target.request(MediaType.APPLICATION_JSON);
-            invocationBuilder.async().get(new InvocationCallback<Response>() {
-                @Override
-                public void completed(Response response) {
-                    Long blockingCallTimeStamp = response.readEntity(Long.class);
-                    responseObserver.onNext(newCreateMessageResponse(request, blockingCallTimeStamp));
-                    responseObserver.onCompleted();
+            BlockServiceGrpc.BlockServiceFutureStub clientStub = BlockServiceGrpc.newFutureStub(blockingServiceChannel);
+            ListenableFuture<BlockingCallResponse> response = clientStub.blockingCall(BlockingCallRequest.newBuilder()
+                    .setBlockPeriodInMilliSeconds(request.getBlockingCallPeriod())
+                    .build());
+            response.addListener(() -> {
+                try {
+                    responseObserver.onNext(CreateMessageResponse.newBuilder()
+                            .setResponseId(Instant.now().toEpochMilli())
+                            .setHash(sha256hex)
+                            .setTime(response.get().getCurrentTime())
+                            .setSampleBooleanField(!request.getSampleBooleanField())
+                            .setSampleDoubleField(request.getSampleDoubleField() + 0.1)
+                            .setSampleIntegerField(request.getSampleIntegerField() + 1)
+                            .build());
+                } catch (InterruptedException | ExecutionException e) {
+                    e.printStackTrace();
+                    responseObserver.onError(e);
                 }
-
-                @Override
-                public void failed(Throwable throwable) {
-
-                }
-            });
+                responseObserver.onCompleted();
+            }, Runnable::run);
 
         } else {
-            responseObserver.onNext(newCreateMessageResponse(request, 0L));
+            responseObserver.onNext(CreateMessageResponse.newBuilder()
+                    .setResponseId(Instant.now().toEpochMilli())
+                    .setHash(sha256hex)
+                    .setTime(0L)
+                    .setSampleBooleanField(!request.getSampleBooleanField())
+                    .setSampleDoubleField(request.getSampleDoubleField() + 0.1)
+                    .setSampleIntegerField(request.getSampleIntegerField() + 1)
+                    .build());
             responseObserver.onCompleted();
         }
+
     }
 
     @Override
     public void listMessage(ListMessageRequest request,
                             StreamObserver<ListMessageResponse> responseObserver) {
 
+        final List<Message> messageList = new ArrayList<>(MessageDao.getMessages(request.getPageSize()));
         if (request.getBlockingCallPeriod() > 0 && request.getBlockingCallPeriod() < 5001) {
-
-            WebTarget target = BlockingServiceClientFactory.getTarget(request.getBlockingCallPeriod());
-            Invocation.Builder invocationBuilder = target.request(MediaType.APPLICATION_JSON);
-            invocationBuilder.async().get(new InvocationCallback<Response>() {
-                @Override
-                public void completed(Response response) {
-                    Long blockingCallTimeStamp = response.readEntity(Long.class);
-
-                    responseObserver.onNext(newListMessageResponse(request, blockingCallTimeStamp));
+            BlockServiceGrpc.BlockServiceFutureStub clientStub = BlockServiceGrpc.newFutureStub(blockingServiceChannel);
+            ListenableFuture<BlockingCallResponse> response = clientStub.blockingCall(BlockingCallRequest.newBuilder()
+                    .setBlockPeriodInMilliSeconds(request.getBlockingCallPeriod())
+                    .build());
+            response.addListener(() -> {
+                try {
+                    responseObserver.onNext(ListMessageResponse.newBuilder()
+                            .setHasNext(true)
+                            .setNextPageToken(request.getPageToken() + "-Next")
+                            .setTime(response.get().getCurrentTime())
+                            .addAllMessages(messageList)
+                            .build());
                     responseObserver.onCompleted();
+                } catch (InterruptedException | ExecutionException e) {
+                    e.printStackTrace();
+                    responseObserver.onError(e);
                 }
-
-                @Override
-                public void failed(Throwable throwable) {
-
-                }
-            });
+                responseObserver.onCompleted();
+            }, Runnable::run);
 
         } else {
-            responseObserver.onNext(newListMessageResponse(request, 0L));
+            responseObserver.onNext(ListMessageResponse.newBuilder()
+                    .setHasNext(true)
+                    .setNextPageToken(request.getPageToken() + "-Next")
+                    .setTime(0L)
+                    .addAllMessages(messageList)
+                    .build());
             responseObserver.onCompleted();
         }
     }
@@ -86,25 +111,36 @@ public class MessageService extends MessageServiceGrpc.MessageServiceImplBase {
         return new StreamObserver<>() {
             @Override
             public void onNext(CreateMessageRequest request) {
+                final String sha256hex = DigestUtils.sha256Hex(request.getRequestId() + request.getTitle() + request.getContent() + request.getAuthor());
                 if (request.getBlockingCallPeriod() > 0 && request.getBlockingCallPeriod() < 5001) {
-
-                    WebTarget target = BlockingServiceClientFactory.getTarget(request.getBlockingCallPeriod());
-                    Invocation.Builder invocationBuilder = target.request(MediaType.APPLICATION_JSON);
-                    invocationBuilder.async().get(new InvocationCallback<Response>() {
-                        @Override
-                        public void completed(Response response) {
-                            Long blockingCallTimeStamp = response.readEntity(Long.class);
-                            responseObserver.onNext(newCreateMessageResponse(request, blockingCallTimeStamp));
+                    BlockServiceGrpc.BlockServiceFutureStub clientStub = BlockServiceGrpc.newFutureStub(blockingServiceChannel);
+                    ListenableFuture<BlockingCallResponse> response = clientStub.blockingCall(BlockingCallRequest.newBuilder()
+                            .setBlockPeriodInMilliSeconds(request.getBlockingCallPeriod())
+                            .build());
+                    response.addListener(() -> {
+                        try {
+                            responseObserver.onNext(CreateMessageResponse.newBuilder()
+                                    .setResponseId(Instant.now().toEpochMilli())
+                                    .setHash(sha256hex)
+                                    .setTime(response.get().getCurrentTime())
+                                    .setSampleBooleanField(!request.getSampleBooleanField())
+                                    .setSampleDoubleField(request.getSampleDoubleField() + 0.1)
+                                    .setSampleIntegerField(request.getSampleIntegerField() + 1)
+                                    .build());
+                        } catch (InterruptedException | ExecutionException e) {
+                            e.printStackTrace();
+                            responseObserver.onError(e);
                         }
-
-                        @Override
-                        public void failed(Throwable throwable) {
-
-                        }
-                    });
-
+                    }, Runnable::run);
                 } else {
-                    responseObserver.onNext(newCreateMessageResponse(request, 0L));
+                    responseObserver.onNext(CreateMessageResponse.newBuilder()
+                            .setResponseId(Instant.now().toEpochMilli())
+                            .setHash(sha256hex)
+                            .setTime(0L)
+                            .setSampleBooleanField(!request.getSampleBooleanField())
+                            .setSampleDoubleField(request.getSampleDoubleField() + 0.1)
+                            .setSampleIntegerField(request.getSampleIntegerField() + 1)
+                            .build());
                 }
             }
 
@@ -119,29 +155,4 @@ public class MessageService extends MessageServiceGrpc.MessageServiceImplBase {
             }
         };
     }
-
-    private CreateMessageResponse newCreateMessageResponse(final CreateMessageRequest request, final long timeStamp) {
-        final String sha256hex = DigestUtils.sha256Hex(request.getRequestId() + request.getTitle() + request.getContent() + request.getAuthor());
-
-        return CreateMessageResponse.newBuilder()
-                .setResponseId(Instant.now().toEpochMilli())
-                .setHash(sha256hex)
-                .setTime(timeStamp)
-                .setSampleBooleanField(!request.getSampleBooleanField())
-                .setSampleDoubleField(request.getSampleDoubleField() + 0.1)
-                .setSampleIntegerField(request.getSampleIntegerField() + 1)
-                .build();
-    }
-
-    static ListMessageResponse newListMessageResponse (final ListMessageRequest request, final long timeStamp) {
-        final List<Message> messageList = new ArrayList<>(MessageDao.getMessages(request.getPageSize()));
-
-        return ListMessageResponse.newBuilder()
-                .setHasNext(true)
-                .setNextPageToken(request.getPageToken() + "-Next")
-                .setTime(timeStamp)
-                .addAllMessages(messageList)
-                .build();
-    }
-
 }
