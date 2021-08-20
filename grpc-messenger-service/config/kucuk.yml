@@ -1,0 +1,4 @@
+certFilePath: "../cert/kucuk.com.crt"
+keyFilePath: "../cert/kucuk.com.pem"
+trustStorePath: "../cert/ca.crt"
+port: 443
