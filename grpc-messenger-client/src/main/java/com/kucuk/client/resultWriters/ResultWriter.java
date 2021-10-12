@@ -1,4 +1,4 @@
-package com.kucuk.client;
+package com.kucuk.client.resultWriters;
 
 import java.io.Closeable;
 import java.io.FileWriter;

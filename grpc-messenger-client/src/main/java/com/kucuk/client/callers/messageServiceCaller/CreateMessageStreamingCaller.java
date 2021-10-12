@@ -2,6 +2,8 @@ package com.kucuk.client.callers.messageServiceCaller;
 
 import com.kucuk.client.MessageServiceTestHelper;
 import com.kucuk.client.callers.CallResult;
+import com.kucuk.client.resultWriters.ClientCallLogEntry;
+import com.kucuk.client.resultWriters.CustomCallLogWriter;
 import com.kucuk.message.CreateMessageRequest;
 import com.kucuk.message.CreateMessageResponse;
 import com.kucuk.message.MessageServiceGrpc;
@@ -20,10 +22,12 @@ public class CreateMessageStreamingCaller extends MessageServiceCallerBase {
     private final MessageServiceGrpc.MessageServiceStub asyncStub;
     private long responseAccumulator = 0;
     private StreamObserver<CreateMessageRequest> requestObserver;
+    private final CustomCallLogWriter customCallLogWriter;
 
-    public CreateMessageStreamingCaller(int callCount, MessageServiceTestHelper testHelper) throws Exception {
+    public CreateMessageStreamingCaller(int callCount, MessageServiceTestHelper testHelper, CustomCallLogWriter customCallLogWriter) throws Exception {
         this.callCount = callCount;
         this.testHelper = testHelper;
+        this.customCallLogWriter = customCallLogWriter;
 
         channel = getChannel();
         asyncStub = MessageServiceGrpc.newStub(channel);
@@ -34,21 +38,38 @@ public class CreateMessageStreamingCaller extends MessageServiceCallerBase {
 
         final int[] success = {0};
         final int[] failure = {0};
+        final long[] callStartTime = {0L};
+        final long[] totalDuration = {0};
+
         final CountDownLatch finishLatch = new CountDownLatch(1);
 
         requestObserver = asyncStub.createMessageStreaming(new StreamObserver<>() {
             @Override
             public void onNext(CreateMessageResponse response) {
-                // 1. Analyse the response
+                // 1. time calculations
+                final long callEndTime = Instant.now().toEpochMilli();
+                totalDuration[0] += callEndTime - callStartTime[0];
+
+                // 2. analyse the response
+                boolean wasCallSuccessful = false;
                 if (isValidCreateMessageResponse(response)) {
                     responseAccumulator++;
                     success[0]++;
+                    wasCallSuccessful = true;
                 } else {
                     failure[0]++;
                 }
 
-                // 2. Make a new create call if the callCount is not zero
+                // 3. write log line corresponding to the call
+                customCallLogWriter.write(ClientCallLogEntry.builder()
+                        .duration(callEndTime - callStartTime[0])
+                        .success(wasCallSuccessful)
+                        .timeStamp(callEndTime)
+                        .build());
+
+                // 4. Make a new create call if the callCount is not zero
                 if (callCount > 0) {
+                    callStartTime[0] = Instant.now().toEpochMilli();
                     CreateMessageRequest request = testHelper.newCreateMessageRequest();
                     requestObserver.onNext(request);
                     callCount--;
@@ -70,9 +91,9 @@ public class CreateMessageStreamingCaller extends MessageServiceCallerBase {
             }
         });
 
-        final long start = Instant.now().toEpochMilli();
         try {
             // Make the first call and reduce the call count by 1.
+            callStartTime[0] = Instant.now().toEpochMilli();
             CreateMessageRequest request = testHelper.newCreateMessageRequest();
             requestObserver.onNext(request);
             callCount--;
@@ -89,13 +110,12 @@ public class CreateMessageStreamingCaller extends MessageServiceCallerBase {
             requestObserver.onError(ex);
         }
 
-        long duration = Instant.now().toEpochMilli() - start;
         channel.shutdownNow().awaitTermination(5, TimeUnit.MINUTES);
 
         return CallResult.builder()
                 .successCount(success[0])
                 .failureCount(failure[0])
-                .duration(duration)
+                .duration(totalDuration[0])
                 .accumulator(responseAccumulator)
                 .build();
     }
